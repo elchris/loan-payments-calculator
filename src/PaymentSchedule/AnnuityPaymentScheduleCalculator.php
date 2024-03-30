@@ -8,35 +8,23 @@
 
 namespace cog\LoanPaymentsCalculator\PaymentSchedule;
 
-
 use cog\LoanPaymentsCalculator\Payment\Payment;
 use cog\LoanPaymentsCalculator\Period\Period;
-
 
 class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
 {
     /**
      * @var Period[]
      */
-    private $schedulePeriods;
-
-    /**
-     * @var float
-     */
-    private $principalAmount;
-
-    /**
-     * @var float
-     */
-    private $dailyInterestRate;
+    private array $schedulePeriods;
+    private float $principalAmount;
+    private float $dailyInterestRate;
 
     /**
      * AnnuityPaymentScheduleCalculator constructor.
      * @param Period[] $schedulePeriods
-     * @param float    $principalAmount
-     * @param float    $dailyInterestRate
      */
-    public function __construct($schedulePeriods, $principalAmount, $dailyInterestRate)
+    public function __construct(array $schedulePeriods, float $principalAmount, float $dailyInterestRate)
     {
         $this->schedulePeriods = $schedulePeriods;
         $this->principalAmount = $principalAmount;
@@ -46,7 +34,7 @@ class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
     /**
      * @inheritdoc
      */
-    public function calculateSchedule()
+    public function calculateSchedule(): array
     {
         $payments = [];
         $numberOfPeriods = count($this->schedulePeriods);
@@ -54,16 +42,16 @@ class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
         $paymentAmount = $this->calculateAnnuityPaymentAmount($periodInterestRate);
         $totalPrincipalToPay = $this->principalAmount;
 
-        for ($i=0; $i<$numberOfPeriods; $i++) {
+        for ($i = 0; $i < $numberOfPeriods; $i++) {
             $payment = new Payment($this->schedulePeriods[$i]);
             // Payment interest
             $paymentInterest = $totalPrincipalToPay * $periodInterestRate;
             $payment->setInterest($paymentInterest);
             // Payment principal
-            $paymentPrincipal = $i == $numberOfPeriods-1 ? $totalPrincipalToPay : $paymentAmount - $paymentInterest;
+            $paymentPrincipal = $i == $numberOfPeriods - 1 ? $totalPrincipalToPay : $paymentAmount - $paymentInterest;
             $payment->setPrincipal($paymentPrincipal);
             // Payment totals
-            $totalPrincipalToPay-=$paymentPrincipal;
+            $totalPrincipalToPay -= $paymentPrincipal;
             $payment->setPrincipalBalanceLeft($totalPrincipalToPay);
 
             $payments[] = $payment;
@@ -88,9 +76,9 @@ class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
     private function calculateInterestPerPeriod()
     {
         $startDate = $this->schedulePeriods[0]->startDate;
-        $endDate = $this->schedulePeriods[count($this->schedulePeriods)-1]->endDate;
+        $endDate = $this->schedulePeriods[count($this->schedulePeriods) - 1]->endDate;
         $daysDiff = $startDate->diff($endDate)->days;
 
-        return $this->dailyInterestRate * $daysDiff/count($this->schedulePeriods);
+        return $this->dailyInterestRate * $daysDiff / count($this->schedulePeriods);
     }
 }

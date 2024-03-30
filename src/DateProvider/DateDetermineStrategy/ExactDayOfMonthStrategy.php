@@ -5,18 +5,16 @@
  * @subpackage:
  * @created: 15/06/2017 11:04
  */
+
 namespace cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy;
+
+use DateInterval;
+use DateTime;
 
 class ExactDayOfMonthStrategy implements DateDetermineStrategyInterface
 {
-    /**
-     * @param \DateTime $startDate
-     *
-     * @return \DateTime
-     */
-    public function calculateNextDate(\DateTime $startDate)
+    public function calculateNextDate(DateTime $startDate): DateTime
     {
-        $endDate = clone $startDate;
-        return $endDate->add(new \DateInterval('P1M'));
+        return (clone $startDate)->add(new DateInterval('P1M'));
     }
 }

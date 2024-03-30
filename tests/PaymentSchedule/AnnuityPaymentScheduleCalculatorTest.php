@@ -6,21 +6,21 @@
  * @created: 06/09/2017 13:31
  */
 
-namespace cog\LoanPayments\Calculator\tests\PaymentSchedule;
+namespace cog\LoanPaymentsCalculator\PaymentSchedule;
 
 use cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy\ExactDayOfMonthStrategy;
 use cog\LoanPaymentsCalculator\DateProvider\DateProvider;
 use cog\LoanPaymentsCalculator\DateProvider\HolidayProvider\WeekendsProvider;
 use cog\LoanPaymentsCalculator\Payment\Payment;
-use cog\LoanPaymentsCalculator\PaymentSchedule\AnnuityPaymentScheduleCalculator;
 use cog\LoanPaymentsCalculator\Schedule\Schedule;
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class AnnuityPaymentScheduleCalculatorTest extends TestCase
 {
-    public function testCreateAnnuityPaymentSchedule()
+    public function testCreateAnnuityPaymentSchedule(): void
     {
-        $startDate = new \DateTime('2016-08-08');
+        $startDate = new DateTime('2016-08-08');
         $principalAmount = 500;
         $numberOfPeriods = 5;
         $paymentAmount = 113.25680760233848;
@@ -32,16 +32,20 @@ class AnnuityPaymentScheduleCalculatorTest extends TestCase
         $payments = $paymentSchedule->calculateSchedule();
 
         $this->assertSame($numberOfPeriods, $numberOfPeriods);
-        for($i=0; $i<$numberOfPeriods; $i++) {
-            $this->assertSame($paymentAmount, $payments[$i]->getPrincipal()+$payments[$i]->getInterest());
+        for ($i = 0; $i < $numberOfPeriods; $i++) {
+            $this->assertEqualsWithDelta(
+                $paymentAmount,
+                $payments[$i]->getPrincipal() + $payments[$i]->getInterest(),
+                0.001
+            );
         }
 
-        $this->printSchedule($payments);
+        //$this->printSchedule($payments);
     }
 
-    public function testCreateOneMonthAnnuityPaymentSchedule()
+    public function testCreateOneMonthAnnuityPaymentSchedule(): void
     {
-        $startDate = new \DateTime('2016-08-08');
+        $startDate = new DateTime('2016-08-08');
         $principalAmount = 500;
         $numberOfPeriods = 1;
         $paymentAmount = 521.21834360699995;
@@ -53,24 +57,24 @@ class AnnuityPaymentScheduleCalculatorTest extends TestCase
         $payments = $paymentSchedule->calculateSchedule();
 
         $this->assertSame($numberOfPeriods, $numberOfPeriods);
-        $this->assertSame($paymentAmount, $payments[0]->getPrincipal()+$payments[0]->getInterest());
-        $this->printSchedule($payments);
+        $this->assertSame($paymentAmount, $payments[0]->getPrincipal() + $payments[0]->getInterest());
+        //$this->printSchedule($payments);
     }
 
     /**
      * @param Payment[] $payments
      */
-    private function printSchedule($payments)
+    private function printSchedule(array $payments): void
     {
         print(PHP_EOL);
-        for($i=0; $i<count($payments); $i++) {
-            print("------------------------- Payment #" . $i . " -------------------------".  PHP_EOL);
-            print("DueDate: " . $payments[$i]->getPeriod()->endDate->format('Y-m-d').  PHP_EOL);
-            print("Period in days: " . $payments[$i]->getPeriod()->daysLength.  PHP_EOL);
-            print("Payment Principal: ". $payments[$i]->getPrincipal().  PHP_EOL);
-            print("Payment Interest: " . $payments[$i]->getInterest().  PHP_EOL);
-            print("Total Payment: " . ($payments[$i]->getPrincipal() + $payments[$i]->getInterest()) .  PHP_EOL);
-            print("Principal left: " . $payments[$i]->getPrincipalBalanceLeft().  PHP_EOL);
+        foreach ($payments as $i => $iValue) {
+            print("------------------------- Payment #" . $i . " -------------------------" . PHP_EOL);
+            print("DueDate: " . $iValue->getPeriod()->endDate->format('Y-m-d') . PHP_EOL);
+            print("Period in days: " . $iValue->getPeriod()->daysLength . PHP_EOL);
+            print("Payment Principal: " . $iValue->getPrincipal() . PHP_EOL);
+            print("Payment Interest: " . $iValue->getInterest() . PHP_EOL);
+            print("Total Payment: " . ($iValue->getPrincipal() + $iValue->getInterest()) . PHP_EOL);
+            print("Principal left: " . $iValue->getPrincipalBalanceLeft() . PHP_EOL);
         }
         print(PHP_EOL);
     }

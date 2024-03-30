@@ -20,33 +20,19 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
     /**
      * @var Period[]
      */
-    private $schedulePeriods;
-
-    /**
-     * @var float
-     */
-    private $principalAmount;
-
-    /**
-     * @var float
-     */
-    private $dailyInterestRate;
-
-    /**
-     * @var float
-     */
-    private $totalInterest;
+    private array $schedulePeriods;
+    private float $principalAmount;
+    private float $dailyInterestRate;
+    private float $totalInterest;
 
     /**
      * PaymentSchedule constructor.
      * @param Period[] $schedulePeriods
-     * @param float    $principalAmount
-     * @param float    $dailyInterestRate
      */
     public function __construct(
-        $schedulePeriods,
-        $principalAmount,
-        $dailyInterestRate
+        array $schedulePeriods,
+        float $principalAmount,
+        float $dailyInterestRate
     ) {
         $this->schedulePeriods = $schedulePeriods;
         $this->principalAmount = $principalAmount;
@@ -54,18 +40,12 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
         $this->totalInterest = 0.0;
     }
 
-    /**
-     * @return float
-     */
-    public function getTotalInterest()
+    public function getTotalInterest(): float
     {
         return $this->totalInterest;
     }
 
-    /**
-     * @param float $totalInterest
-     */
-    public function setTotalInterest($totalInterest)
+    public function setTotalInterest(float $totalInterest): void
     {
         $this->totalInterest = $totalInterest;
     }
@@ -73,17 +53,17 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
     /**
      * @inheritdoc
      */
-    public function calculateSchedule()
+    public function calculateSchedule(): array
     {
         /**
          * @var Payment[] $payments
          */
         $payments = [];
         $numberOfPeriods = count($this->schedulePeriods);
-        $paymentPrincipal = $this->principalAmount/$numberOfPeriods;
+        $paymentPrincipal = $this->principalAmount / $numberOfPeriods;
         $totalPrincipalToPay = $this->principalAmount;
 
-        for ($i=0; $i<$numberOfPeriods; $i++) {
+        for ($i = 0; $i < $numberOfPeriods; $i++) {
             $payment = new Payment($this->schedulePeriods[$i]);
             // Payment principal
             $payment->setPrincipal($paymentPrincipal);
@@ -91,7 +71,7 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
             $paymentInterest = $this->calculatePaymentInterest($totalPrincipalToPay, $this->dailyInterestRate, $payment->getPeriod()->daysLength);
             $payment->setInterest($paymentInterest);
             // Payment totals
-            $totalPrincipalToPay-=$paymentPrincipal;
+            $totalPrincipalToPay -= $paymentPrincipal;
             $payment->setPrincipalBalanceLeft($totalPrincipalToPay);
 
             $payments[] = $payment;
@@ -101,14 +81,8 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
         return $payments;
     }
 
-    /**
-     * @param float   $remainingPrincipalAmount
-     * @param float   $dailyInterestRate
-     * @param integer $periodInDays
-     * @return float
-     */
-    private function calculatePaymentInterest($remainingPrincipalAmount, $dailyInterestRate, $periodInDays)
+    private function calculatePaymentInterest(float $remainingPrincipalAmount, float $dailyInterestRate, int $periodInDays): float
     {
-        return $remainingPrincipalAmount*$dailyInterestRate*$periodInDays;
+        return $remainingPrincipalAmount * $dailyInterestRate * $periodInDays;
     }
 }

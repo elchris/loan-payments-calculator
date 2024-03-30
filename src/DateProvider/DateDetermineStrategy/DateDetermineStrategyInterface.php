@@ -5,19 +5,15 @@
  * @subpackage: DateProvider
  * @created: 14/06/2017 15:04
  */
+
 namespace cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy;
+
+use DateTime;
 
 /**
  * Interface DateDetermineStrategyInterface
  */
 interface DateDetermineStrategyInterface
 {
-    /**
-     * Returns closest raw possible day for payment
-     *
-     * @param \DateTime $startDate
-     *
-     * @return \DateTime
-     */
-    public function calculateNextDate(\DateTime $startDate);
+    public function calculateNextDate(DateTime $startDate): DateTime;
 }

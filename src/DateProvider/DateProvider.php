@@ -6,48 +6,30 @@
  * @subpackage: DateProvider
  * @created: 14/06/2017 14:55
  */
+
 namespace cog\LoanPaymentsCalculator\DateProvider;
 
 use cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy\DateDetermineStrategyInterface;
 use cog\LoanPaymentsCalculator\DateProvider\HolidayProvider\HolidayProvider;
+use DateTime;
 
 class DateProvider
 {
-    /**
-     * @var DateDetermineStrategyInterface
-     */
-    private $dateDetermineStrategy;
+    private DateDetermineStrategyInterface $dateDetermineStrategy;
+    private HolidayProvider $holidayProvider;
+    private bool $shiftForward;
 
-    /**
-     * @var HolidayProvider
-     */
-    private $holidayProvider;
-
-    /**
-     * @var bool
-     */
-    private $shiftForward;
-
-    /**
-     * DateProvider constructor.
-     *
-     * @param DateDetermineStrategyInterface $dateDetermineStrategy
-     * @param HolidayProvider                $holidayProvider
-     * @param bool                           $shiftForward
-     */
-    public function __construct(DateDetermineStrategyInterface $dateDetermineStrategy, HolidayProvider $holidayProvider, $shiftForward)
-    {
+    public function __construct(
+        DateDetermineStrategyInterface $dateDetermineStrategy,
+        HolidayProvider $holidayProvider,
+        bool $shiftForward
+    ) {
         $this->dateDetermineStrategy = $dateDetermineStrategy;
         $this->holidayProvider = $holidayProvider;
         $this->shiftForward = $shiftForward;
     }
 
-    /**
-     * @param \DateTime $startDate
-     *
-     * @return \DateTime
-     */
-    public function calculate(\DateTime $startDate)
+    public function calculate(DateTime $startDate): DateTime
     {
         $calculatedDate = $this->dateDetermineStrategy->calculateNextDate($startDate);
         if ($this->holidayProvider->isHoliday($calculatedDate)) {
@@ -59,12 +41,7 @@ class DateProvider
         return $calculatedDate;
     }
 
-    /**
-     * @param \DateTime $date
-     *
-     * @return \DateTime
-     */
-    private function getNextBusinessDay(\DateTime $date)
+    private function getNextBusinessDay(DateTime $date): DateTime
     {
         do {
             $date->modify('+1 day');
@@ -73,12 +50,7 @@ class DateProvider
         return $date;
     }
 
-    /**
-     * @param \DateTime $date
-     *
-     * @return \DateTime
-     */
-    private function getPreviousBusinessDay(\DateTime $date)
+    private function getPreviousBusinessDay(DateTime $date): DateTime
     {
         do {
             $date->modify('-1 day');

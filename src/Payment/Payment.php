@@ -8,7 +8,6 @@
 
 namespace cog\LoanPaymentsCalculator\Payment;
 
-
 use cog\LoanPaymentsCalculator\Period\Period;
 
 class Payment
@@ -16,27 +15,19 @@ class Payment
     /**
      * @var Period
      */
-    private $period;
+    private Period $period;
 
     /**
      * @var float
      */
-    private $principal;
+    private float $principal;
 
     /**
      * @var float
      */
-    private $interest;
-
-    /**
-     * @var $fees
-     */
-    private $fees;
-
-    /**
-     * @var float
-     */
-    private $principalBalanceLeft;
+    private float $interest;
+    private mixed $fees;
+    private float $principalBalanceLeft;
 
     /**
      * Payment constructor.
@@ -47,82 +38,52 @@ class Payment
         $this->period = $period;
     }
 
-    /**
-     * @return Period
-     */
-    public function getPeriod()
+    public function getPeriod(): Period
     {
         return $this->period;
     }
 
-    /**
-     * @param Period $period
-     */
-    public function setPeriod($period)
+    public function setPeriod(Period $period): void
     {
         $this->period = $period;
     }
 
-    /**
-     * @return float
-     */
-    public function getPrincipal()
+    public function getPrincipal(): float
     {
         return $this->principal;
     }
 
-    /**
-     * @param float $principal
-     */
-    public function setPrincipal($principal)
+    public function setPrincipal(float $principal): void
     {
         $this->principal = $principal;
     }
 
-    /**
-     * @return float
-     */
-    public function getInterest()
+    public function getInterest(): float
     {
         return $this->interest;
     }
 
-    /**
-     * @param float $interest
-     */
-    public function setInterest($interest)
+    public function setInterest(float $interest): void
     {
         $this->interest = $interest;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getFees()
+    public function getFees(): mixed
     {
         return $this->fees;
     }
 
-    /**
-     * @param mixed $fees
-     */
-    public function setFees($fees)
+    public function setFees(mixed $fees): void
     {
         $this->fees = $fees;
     }
 
-    /**
-     * @return float
-     */
-    public function getPrincipalBalanceLeft()
+    public function getPrincipalBalanceLeft(): float
     {
         return $this->principalBalanceLeft;
     }
 
-    /**
-     * @param float $principalBalanceLeft
-     */
-    public function setPrincipalBalanceLeft($principalBalanceLeft)
+    public function setPrincipalBalanceLeft(float $principalBalanceLeft): void
     {
         $this->principalBalanceLeft = $principalBalanceLeft;
     }

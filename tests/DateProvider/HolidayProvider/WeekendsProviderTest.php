@@ -6,30 +6,31 @@
  * @subpackage: Tests
  * @created: 14/06/2017 16:01
  */
-namespace cog\LoanPayments\Calculator\tests\DateProvider\HolidayProvider;
 
-use cog\LoanPaymentsCalculator\DateProvider\HolidayProvider\WeekendsProvider;
+namespace cog\LoanPaymentsCalculator\DateProvider\HolidayProvider;
+
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class WeekendsProviderTest extends TestCase
 {
-    public function testSaturdayIsHoliday()
+    public function testSaturdayIsHoliday(): void
     {
-        $date = new \DateTime('2017-06-17');
+        $date = new DateTime('2017-06-17');
         $weekendsProvider = new WeekendsProvider();
         $this->assertTrue($weekendsProvider->isHoliday($date));
     }
 
-    public function testSundayIsHoliday()
+    public function testSundayIsHoliday(): void
     {
-        $date = new \DateTime('2017-06-18');
+        $date = new DateTime('2017-06-18');
         $weekendsProvider = new WeekendsProvider();
         $this->assertTrue($weekendsProvider->isHoliday($date));
     }
 
-    public function testMondayIsNotHoliday()
+    public function testMondayIsNotHoliday(): void
     {
-        $date = new \DateTime('2017-06-19');
+        $date = new DateTime('2017-06-19');
         $weekendsProvider = new WeekendsProvider();
         $this->assertFalse($weekendsProvider->isHoliday($date));
     }

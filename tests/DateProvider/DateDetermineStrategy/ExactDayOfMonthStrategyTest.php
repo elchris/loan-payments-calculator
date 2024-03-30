@@ -6,14 +6,21 @@
  * @created: 05/09/2017 14:54
  */
 
-use cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy\ExactDayOfMonthStrategy;
+namespace cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy;
+
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class ExactDayOfMonthStrategyTest extends TestCase
 {
-    public function testNextDateIsSameDay()
+    public function testNextDateIsSameDay(): void
     {
         $dateStrategy = new ExactDayOfMonthStrategy();
-        $this->assertEquals(new DateTime('2017-08-05'), $dateStrategy->calculateNextDate(new DateTime('2017-07-05')));
+        $this->assertEquals(
+            new DateTime('2017-08-05'),
+            $dateStrategy->calculateNextDate(
+                new DateTime('2017-07-05')
+            )
+        );
     }
 }
