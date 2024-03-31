@@ -42,13 +42,13 @@ class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
         $paymentAmount = $this->calculateAnnuityPaymentAmount($periodInterestRate);
         $totalPrincipalToPay = $this->principalAmount;
 
-        for ($i = 0; $i < $numberOfPeriods; $i++) {
+        foreach ($this->schedulePeriods as $i => $iValue) {
             $payment = new Payment($this->schedulePeriods[$i]);
             // Payment interest
             $paymentInterest = $totalPrincipalToPay * $periodInterestRate;
             $payment->setInterest($paymentInterest);
             // Payment principal
-            $paymentPrincipal = $i == $numberOfPeriods - 1 ? $totalPrincipalToPay : $paymentAmount - $paymentInterest;
+            $paymentPrincipal = $i === $numberOfPeriods - 1 ? $totalPrincipalToPay : $paymentAmount - $paymentInterest;
             $payment->setPrincipal($paymentPrincipal);
             // Payment totals
             $totalPrincipalToPay -= $paymentPrincipal;
@@ -60,20 +60,13 @@ class AnnuityPaymentScheduleCalculator implements PaymentScheduleCalculator
         return $payments;
     }
 
-    /**
-     * @param float $interestPerPeriod
-     * @return float
-     */
-    private function calculateAnnuityPaymentAmount($interestPerPeriod)
+    private function calculateAnnuityPaymentAmount(float $interestPerPeriod): float
     {
         // Payment = InterestPerPeriod x TotalPrincipal / 1 - ( 1 + InterestPerPeriod)^(-numberOfPeriods)
-        return (($interestPerPeriod) *  $this->principalAmount) / (1 - pow(1 + ($interestPerPeriod), -count($this->schedulePeriods)));
+        return (($interestPerPeriod) * $this->principalAmount) / (1 - ((1 + ($interestPerPeriod)) ** -count($this->schedulePeriods)));
     }
 
-    /**
-     * @return float
-     */
-    private function calculateInterestPerPeriod()
+    private function calculateInterestPerPeriod(): float
     {
         $startDate = $this->schedulePeriods[0]->startDate;
         $endDate = $this->schedulePeriods[count($this->schedulePeriods) - 1]->endDate;

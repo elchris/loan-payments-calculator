@@ -63,7 +63,7 @@ class EqualPrincipalPaymentScheduleCalculator implements PaymentScheduleCalculat
         $paymentPrincipal = $this->principalAmount / $numberOfPeriods;
         $totalPrincipalToPay = $this->principalAmount;
 
-        for ($i = 0; $i < $numberOfPeriods; $i++) {
+        foreach ($this->schedulePeriods as $i => $iValue) {
             $payment = new Payment($this->schedulePeriods[$i]);
             // Payment principal
             $payment->setPrincipal($paymentPrincipal);

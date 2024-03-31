@@ -48,6 +48,11 @@ class Payment
         $this->period = $period;
     }
 
+    public function getTotalPayment(): float
+    {
+        return $this->getPrincipal() + $this->getInterest();
+    }
+
     public function getPrincipal(): float
     {
         return $this->principal;

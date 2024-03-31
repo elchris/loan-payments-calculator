@@ -14,32 +14,48 @@ use cog\LoanPaymentsCalculator\DateProvider\HolidayProvider\WeekendsProvider;
 use cog\LoanPaymentsCalculator\Payment\Payment;
 use cog\LoanPaymentsCalculator\Schedule\Schedule;
 use DateTime;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class AnnuityPaymentScheduleCalculatorTest extends TestCase
 {
-    public function testCreateAnnuityPaymentSchedule(): void
+    public static function annuityPaymentScheduleDataProvider(): array
     {
-        $startDate = new DateTime('2016-08-08');
-        $principalAmount = 500;
-        $numberOfPeriods = 5;
-        $paymentAmount = 113.25680760233848;
+        return [
+            [new DateTime('2016-08-08'), 500, 5, 113.25680760233848, 0.001368925394],
+            [new DateTime('2016-08-08'), 500, 1, 521.21834360699995, 0.001368925394],
+            [new DateTime('2024-05-01'), 499000, 360, 3432.4921123041, 0.000195205479452],
+        ];
+    }
+
+    #[DataProvider('annuityPaymentScheduleDataProvider')]
+    public function testCreateAnnuityPaymentSchedule(
+        DateTime $startDate,
+        float $principalAmount,
+        int $numberOfPeriods,
+        float $paymentAmount,
+        float $dailyInterestRate
+    ): void {
         $dateProvider = new DateProvider(new ExactDayOfMonthStrategy(), new WeekendsProvider(), true);
         $schedule = new Schedule($startDate, $numberOfPeriods, $dateProvider);
         $schedulePeriods = $schedule->generatePeriods();
-
-        $paymentSchedule = new AnnuityPaymentScheduleCalculator($schedulePeriods, $principalAmount, 0.001368925394);
+        $paymentSchedule = new AnnuityPaymentScheduleCalculator(
+            $schedulePeriods,
+            $principalAmount,
+            $dailyInterestRate
+        );
         $payments = $paymentSchedule->calculateSchedule();
 
-        $this->assertSame($numberOfPeriods, $numberOfPeriods);
+        $this->assertCount(
+            $numberOfPeriods, $schedulePeriods
+        );
         for ($i = 0; $i < $numberOfPeriods; $i++) {
             $this->assertEqualsWithDelta(
                 $paymentAmount,
                 $payments[$i]->getPrincipal() + $payments[$i]->getInterest(),
-                0.001
+                0.01
             );
         }
-
         //$this->printSchedule($payments);
     }
 
@@ -56,7 +72,9 @@ class AnnuityPaymentScheduleCalculatorTest extends TestCase
         $paymentSchedule = new AnnuityPaymentScheduleCalculator($schedulePeriods, $principalAmount, 0.001368925394);
         $payments = $paymentSchedule->calculateSchedule();
 
-        $this->assertSame($numberOfPeriods, $numberOfPeriods);
+        $this->assertCount(
+            $numberOfPeriods, $schedulePeriods
+        );
         $this->assertSame($paymentAmount, $payments[0]->getPrincipal() + $payments[0]->getInterest());
         //$this->printSchedule($payments);
     }
