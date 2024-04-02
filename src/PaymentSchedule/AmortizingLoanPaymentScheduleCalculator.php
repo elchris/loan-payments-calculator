@@ -10,17 +10,34 @@ class AmortizingLoanPaymentScheduleCalculator implements PaymentScheduleCalculat
     private float $principalAmount;
     private float $annualInterestRate;
     private int $numberOfPeriods;
+    /** @var Payment[] $extraPayments */
+    private array $extraPayments;
 
     public function __construct(
         array $schedulePeriods,
         float $principalAmount,
         float $annualInterestRate,
-        int $numberOfPeriods
+        array $extraPayments = []
     ) {
         $this->schedulePeriods = $schedulePeriods;
         $this->principalAmount = $principalAmount;
         $this->annualInterestRate = $annualInterestRate;
-        $this->numberOfPeriods = $numberOfPeriods;
+        $this->numberOfPeriods = count($schedulePeriods);
+        $this->extraPayments = $extraPayments;
+    }
+
+    public static function withExtraPayments(
+        array $schedulePeriods,
+        float $principalAmount,
+        float $annualInterestRate,
+        array $extraPayments
+    ): self {
+        return new self(
+            $schedulePeriods,
+            $principalAmount,
+            $annualInterestRate,
+            $extraPayments
+        );
     }
 
     /**
@@ -33,7 +50,13 @@ class AmortizingLoanPaymentScheduleCalculator implements PaymentScheduleCalculat
         $monthlyPayment = $this->calculateMonthlyPayment($monthlyInterestRate);
 
         $remainingPrincipal = $this->principalAmount;
+        foreach ($this->extraPayments as $extraPayment) {
+            $remainingPrincipal -= $extraPayment->getPrincipal();
+        }
         for ($i = 1; $i <= $this->numberOfPeriods; $i++) {
+            if ($remainingPrincipal <= 0) {
+                break;
+            }
             $payment = new Payment($this->schedulePeriods[$i - 1]);
             $paymentInterest = $remainingPrincipal * $monthlyInterestRate;
             $payment->setInterest($paymentInterest);
