@@ -31,7 +31,6 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
                 18.00, //annualInterestRate
                 455.31249392652, //expectedTotalMonthlyPayment,
                 36, //expectedTotalPayments if extra payments are present
-                //1184.21450839616
             ],
             [
                 new DateTime('2024-06-01'), //loanStartDate
