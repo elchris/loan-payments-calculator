@@ -6,7 +6,6 @@ use cog\LoanPaymentsCalculator\DateProvider\DateDetermineStrategy\ExactDayOfMont
 use cog\LoanPaymentsCalculator\DateProvider\DateProvider;
 use cog\LoanPaymentsCalculator\DateProvider\HolidayProvider\NeverHolidayProvider;
 use cog\LoanPaymentsCalculator\Payment\Payment;
-use cog\LoanPaymentsCalculator\Period\Period;
 use cog\LoanPaymentsCalculator\Schedule\Schedule;
 use DateTime;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,7 +22,7 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
                 360, //numberOfPeriods
                 7.125, //annualInterestRate
                 3361.8554312727, //expectedTotalMonthlyPayment
-                353, //expectedTotalPayments
+                353, //expectedTotalPayments if extra payments are present
             ],
             [
                 new DateTime('2024-06-01'), //loanStartDate
@@ -31,7 +30,8 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
                 48, //numberOfPeriods
                 18.00, //annualInterestRate
                 455.31249392652, //expectedTotalMonthlyPayment,
-                36, //expectedTotalPayments
+                36, //expectedTotalPayments if extra payments are present
+                //1184.21450839616
             ],
             [
                 new DateTime('2024-06-01'), //loanStartDate
@@ -39,7 +39,7 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
                 48, //numberOfPeriods
                 18.00, //annualInterestRate
                 487.18436850137, //expectedTotalMonthlyPayment
-                37, //expectedTotalPayments
+                37, //expectedTotalPayments if extra payments are present
             ],
         ];
     }
@@ -92,34 +92,34 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
             $numberOfPeriods
         );
 
-        $paymentOne = new Payment(
-            new Period(
-                new DateTime('2024-06-10'),
-                new DateTime('2024-06-10')
-            )
-        );
-        $paymentOne->setPrincipal(1000.00);
-        $paymentOne->setInterest(0.00);
-        $paymentTwo = new Payment(
-            new Period(
-                new DateTime('2024-06-20'),
-                new DateTime('2024-06-20')
-            )
-        );
-        $paymentTwo->setPrincipal(2000.00);
-        $paymentTwo->setInterest(0.00);
+        $paymentOne = 1000.00;
+        $paymentTwo = 2000.00;
 
         // When
-        $calculator = AmortizingLoanPaymentScheduleCalculator::withExtraPayments(
+        $calculator = new AmortizingLoanPaymentScheduleCalculator(
             $schedulePeriods,
             $principalAmount,
             $annualInterestRate,
-            [
-                $paymentOne,
-                $paymentTwo,
-            ]
         );
+        $calculator->addExtraPrincipalPayment($paymentOne);
+        $calculator->addExtraPrincipalPayment($paymentTwo);
         $payments = $calculator->calculateSchedule();
+
+        self::assertGreaterThan(
+            0,
+            count($payments)
+        );
+        $totalPrincipalPaid = 0;
+        $totalInterestPaid = 0;
+        foreach ($payments as $payment) {
+            $totalInterestPaid += $payment->getInterest();
+            $totalPrincipalPaid += $payment->getPrincipal();
+        }
+        self::assertEqualsWithDelta(
+            $principalAmount,
+            $totalPrincipalPaid + $paymentOne + $paymentTwo,
+            0.01
+        );
 
         // Then
         // Assert the number of payments
@@ -142,37 +142,57 @@ class AmortizingLoanPaymentScheduleCalculatorTest extends TestCase
         int $numberOfPeriods,
         int $expectedTotalPayments = null
     ): void {
+        $hasExtraPrincipalPayments = true;
         if (!$expectedTotalPayments) {
             $expectedTotalPayments = $numberOfPeriods;
+            $hasExtraPrincipalPayments = false;
         }
         $currentInterestPayment = null;
         $currentPrincipalPayment = null;
         $currentPrincipalBalance = null;
-        $count = 0;
 
+        $paymentCounter = 0;
+        $paymentComparisonCount = 0;
         foreach ($payments as $payment) {
+            $paymentCounter++;
             $this->assertGreaterThan(0, $payment->getPrincipal());
             $this->assertGreaterThan(0, $payment->getInterest());
-            self::assertEqualsWithDelta(
-                $payment->getTotalPayment(),
-                $expectedTotalMonthlyPayment,
-                0.01
+            $isNotLastPayment = $paymentCounter <= ((count($payments) - 1));
+            if (!$hasExtraPrincipalPayments || $isNotLastPayment) {
+                self::assertEqualsWithDelta(
+                    $expectedTotalMonthlyPayment,
+                    $payment->getTotalPayment(),
+                    0.01
+                );
+            } else {
+                self::assertLessThan(
+                    $expectedTotalMonthlyPayment,
+                    $payment->getTotalPayment()
+                );
+            }
+            self::assertSame(
+                $payment->getPrincipal() + $payment->getInterest(),
+                $payment->getTotalPayment()
             );
             self::assertSame(
                 $payment->getPrincipal() + $payment->getInterest(),
                 $payment->getTotalPayment()
             );
             if ($currentInterestPayment && $currentPrincipalPayment && $currentPrincipalBalance) {
-                $count++;
-                $this->assertLessThan($currentInterestPayment, $payment->getInterest());
-                $this->assertGreaterThan($currentPrincipalPayment, $payment->getPrincipal());
-                $this->assertLessThan($currentPrincipalBalance, $payment->getPrincipalBalanceLeft());
+                $paymentComparisonCount++;
+                self::assertLessThan($currentInterestPayment, $payment->getInterest());
+                if (!$hasExtraPrincipalPayments || $isNotLastPayment) {
+                    self::assertGreaterThan($currentPrincipalPayment, $payment->getPrincipal());
+                } else {
+                    self::assertLessThan($currentPrincipalPayment, $payment->getPrincipal());
+                }
+                self::assertLessThan($currentPrincipalBalance, $payment->getPrincipalBalanceLeft());
             }
             $currentInterestPayment = $payment->getInterest();
             $currentPrincipalPayment = $payment->getPrincipal();
             $currentPrincipalBalance = $payment->getPrincipalBalanceLeft();
         }
-        self::assertSame($expectedTotalPayments - 1, $count);
+        self::assertSame($expectedTotalPayments - 1, $paymentComparisonCount);
     }
 
     private function getPeriods(DateTime $startDate, int $numberOfPeriods): array

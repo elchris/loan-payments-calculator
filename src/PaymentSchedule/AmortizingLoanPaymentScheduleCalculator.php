@@ -10,34 +10,23 @@ class AmortizingLoanPaymentScheduleCalculator implements PaymentScheduleCalculat
     private float $principalAmount;
     private float $annualInterestRate;
     private int $numberOfPeriods;
-    /** @var Payment[] $extraPayments */
-    private array $extraPayments;
+    /** @var float[] $extraPayments */
+    private array $extraPayments = [];
 
     public function __construct(
         array $schedulePeriods,
         float $principalAmount,
-        float $annualInterestRate,
-        array $extraPayments = []
+        float $annualInterestRate
     ) {
         $this->schedulePeriods = $schedulePeriods;
         $this->principalAmount = $principalAmount;
         $this->annualInterestRate = $annualInterestRate;
         $this->numberOfPeriods = count($schedulePeriods);
-        $this->extraPayments = $extraPayments;
     }
 
-    public static function withExtraPayments(
-        array $schedulePeriods,
-        float $principalAmount,
-        float $annualInterestRate,
-        array $extraPayments
-    ): self {
-        return new self(
-            $schedulePeriods,
-            $principalAmount,
-            $annualInterestRate,
-            $extraPayments
-        );
+    public function addExtraPrincipalPayment(float $paymentOne): void
+    {
+        $this->extraPayments[] = $paymentOne;
     }
 
     /**
@@ -51,21 +40,26 @@ class AmortizingLoanPaymentScheduleCalculator implements PaymentScheduleCalculat
 
         $remainingPrincipal = $this->principalAmount;
         foreach ($this->extraPayments as $extraPayment) {
-            $remainingPrincipal -= $extraPayment->getPrincipal();
+            $remainingPrincipal -= $extraPayment;
         }
         for ($i = 1; $i <= $this->numberOfPeriods; $i++) {
             if ($remainingPrincipal <= 0) {
                 break;
             }
             $payment = new Payment($this->schedulePeriods[$i - 1]);
-            $paymentInterest = $remainingPrincipal * $monthlyInterestRate;
-            $payment->setInterest($paymentInterest);
 
+            $paymentInterest = $remainingPrincipal * $monthlyInterestRate;
             $paymentPrincipal = $monthlyPayment - $paymentInterest;
+            $payment->setInterest($paymentInterest);
             $payment->setPrincipal($paymentPrincipal);
 
             $remainingPrincipal -= $paymentPrincipal;
             $payment->setPrincipalBalanceLeft($remainingPrincipal);
+
+            if ($remainingPrincipal < 0) {
+                $payment->setPrincipalBalanceLeft(0);
+                $payment->setPrincipal($paymentPrincipal + $remainingPrincipal);
+            }
 
             $payments[] = $payment;
         }
