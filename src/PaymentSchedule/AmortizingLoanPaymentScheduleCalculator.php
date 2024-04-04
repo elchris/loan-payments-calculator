@@ -24,9 +24,9 @@ class AmortizingLoanPaymentScheduleCalculator implements PaymentScheduleCalculat
         $this->numberOfPeriods = count($schedulePeriods);
     }
 
-    public function addExtraPrincipalPayment(float $paymentOne): void
+    public function addExtraPrincipalPayment(float $extraPaymentAmount): void
     {
-        $this->extraPayments[] = $paymentOne;
+        $this->extraPayments[] = $extraPaymentAmount;
     }
 
     /**
